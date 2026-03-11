@@ -7,7 +7,17 @@ st.set_page_config(page_title="StockSnap AI", page_icon="📈", layout="wide")
 
 st.title("📈 StockSnap AI")
 st.caption("AI-powered stock comparison and single-stock analysis tool")
+st.divider()
+
 st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
+
+ai_stock_list = ["NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "TSM", "META", "AAPL"]
+
+st.subheader("🔥 Top AI Stocks")
+selected_ai_stock = st.selectbox(
+    "Pick a popular AI-related stock for quick analysis:",
+    ["None"] + ai_stock_list
+)
 
 mode = st.radio("Choose analysis mode:", ["Compare Two Stocks", "Analyze One Stock"])
 
@@ -15,7 +25,8 @@ if mode == "Compare Two Stocks":
     ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
     ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
 else:
-    single_ticker = st.text_input("Enter a stock ticker", value="NVDA").upper()
+    default_single = selected_ai_stock if selected_ai_stock != "None" else "NVDA"
+    single_ticker = st.text_input("Enter a stock ticker", value=default_single).upper()
 
 
 def get_stock_data(ticker):
@@ -27,6 +38,8 @@ def get_stock_data(ticker):
     net_income = "N/A"
     revenue_growth = "N/A"
     earnings_growth = "N/A"
+    gross_margin = "N/A"
+    operating_margin = "N/A"
 
     if not income_stmt.empty:
         if "Total Revenue" in income_stmt.index:
@@ -40,6 +53,18 @@ def get_stock_data(ticker):
             net_income = income_series.iloc[0]
             if len(income_series) > 1 and income_series.iloc[1] not in [0, None]:
                 earnings_growth = ((income_series.iloc[0] - income_series.iloc[1]) / income_series.iloc[1]) * 100
+
+        if "Gross Profit" in income_stmt.index and "Total Revenue" in income_stmt.index:
+            gross_profit = income_stmt.loc["Gross Profit"].iloc[0]
+            total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
+            if total_revenue not in [0, None]:
+                gross_margin = (gross_profit / total_revenue) * 100
+
+        if "Operating Income" in income_stmt.index and "Total Revenue" in income_stmt.index:
+            operating_income = income_stmt.loc["Operating Income"].iloc[0]
+            total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
+            if total_revenue not in [0, None]:
+                operating_margin = (operating_income / total_revenue) * 100
 
     hist = stock.history(period="6mo")
     latest_close = hist["Close"].iloc[-1] if not hist.empty else "N/A"
@@ -55,6 +80,8 @@ def get_stock_data(ticker):
         "Revenue Growth %": revenue_growth,
         "Net Income": net_income,
         "Earnings Growth %": earnings_growth,
+        "Gross Margin %": gross_margin,
+        "Operating Margin %": operating_margin,
         "History": hist
     }
 
@@ -101,6 +128,8 @@ Revenue: {stock1["Revenue"]}
 Revenue Growth %: {stock1["Revenue Growth %"]}
 Net Income: {stock1["Net Income"]}
 Earnings Growth %: {stock1["Earnings Growth %"]}
+Gross Margin %: {stock1["Gross Margin %"]}
+Operating Margin %: {stock1["Operating Margin %"]}
 
 Stock 2:
 Company: {stock2["Company"]}
@@ -113,6 +142,8 @@ Revenue: {stock2["Revenue"]}
 Revenue Growth %: {stock2["Revenue Growth %"]}
 Net Income: {stock2["Net Income"]}
 Earnings Growth %: {stock2["Earnings Growth %"]}
+Gross Margin %: {stock2["Gross Margin %"]}
+Operating Margin %: {stock2["Operating Margin %"]}
 
 Return your answer in this exact format:
 
@@ -123,6 +154,7 @@ Return your answer in this exact format:
 - Overall Score: x/10
 - Growth Score: x/10
 - Valuation Score: x/10
+- Profitability Score: x/10
 - Risk Score: x/10
 
 ### {stock2["Ticker"]}
@@ -130,6 +162,7 @@ Return your answer in this exact format:
 - Overall Score: x/10
 - Growth Score: x/10
 - Valuation Score: x/10
+- Profitability Score: x/10
 - Risk Score: x/10
 
 ## Winner
@@ -138,7 +171,7 @@ State which stock looks stronger right now and why in 2-3 sentences.
 ## Beginner Summary
 Give a short beginner-friendly summary with key risks for both stocks.
 
-Keep spacing clean and easy to read. Do not remove spaces between numbers and words.
+Keep spacing clean and easy to read.
 Not financial advice.
 """
 
@@ -167,6 +200,17 @@ if mode == "Analyze One Stock" and st.button("Analyze Stock"):
     if not stock["History"].empty:
         st.line_chart(stock["History"]["Close"])
 
+    st.subheader("Quick Watchlist Insight")
+    if stock["Revenue Growth %"] != "N/A" and stock["Earnings Growth %"] != "N/A":
+        if stock["Revenue Growth %"] > 15 and stock["Earnings Growth %"] > 15:
+            st.success("This stock currently shows strong growth trends.")
+        elif stock["Revenue Growth %"] > 0 and stock["Earnings Growth %"] > 0:
+            st.info("This stock currently shows moderate positive growth.")
+        else:
+            st.warning("This stock has weaker or mixed recent growth trends.")
+    else:
+        st.info("Not enough financial trend data is available for a quick watchlist insight.")
+
     st.subheader("AI Deep Analysis")
     st.info("AI-generated analysis for educational purposes only. Not financial advice.")
 
@@ -186,6 +230,8 @@ Revenue: {stock["Revenue"]}
 Revenue Growth %: {stock["Revenue Growth %"]}
 Net Income: {stock["Net Income"]}
 Earnings Growth %: {stock["Earnings Growth %"]}
+Gross Margin %: {stock["Gross Margin %"]}
+Operating Margin %: {stock["Operating Margin %"]}
 
 Return your answer in this exact format:
 
@@ -194,6 +240,7 @@ Return your answer in this exact format:
 - Overall Score: x/10
 - Growth Score: x/10
 - Valuation Score: x/10
+- Profitability Score: x/10
 - Risk Score: x/10
 
 ## What the Company Does
