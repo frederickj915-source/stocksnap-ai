@@ -304,20 +304,26 @@ if mode == "Analyze One Stock" and st.button("Analyze Stock"):
     if "OPENAI_API_KEY" not in st.secrets:
         st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
     else:
-        prompt = f"""
+       prompt = f"""
 Analyze this stock for a beginner investor.
 
 Stock:
 {stock}
 
-Explain what the company does, strengths, risks, and give a beginner-friendly summary.
+Return your answer in this format:
+
+## Company Overview
+Explain what the company does.
+
+## Strengths
+List the company's main strengths.
+
+## Risks
+List the main risks investors should know.
+
+## Beginner-Friendly Summary
+Give a short simple explanation of whether this stock looks strong or risky for a beginner investor.
+
+Do not ask questions or add suggestions at the end.
+End the response after the summary.
 """
-        try:
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-            response = client.responses.create(
-                model="gpt-4.1-mini",
-                input=prompt,
-            )
-            st.markdown(response.output_text)
-        except Exception as e:
-            st.error(f"AI analysis could not load: {e}")
