@@ -253,11 +253,13 @@ if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
     if not stock2["History"].empty:
         st.line_chart(stock2["History"]["Close"])
 
-    st.subheader("AI Summary")
-    if "OPENAI_API_KEY" not in st.secrets:
-        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
-    else:
-        prompt = f"""
+ st.subheader("AI Summary")
+
+if "OPENAI_API_KEY" not in st.secrets:
+    st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
+else:
+
+    prompt = f"""
 Compare these two stocks for a beginner investor.
 
 Stock 1:
@@ -266,67 +268,32 @@ Stock 1:
 Stock 2:
 {stock2}
 
-Explain which stock looks stronger and why.
-"""
-try:
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt,
-    )
-
-    st.markdown(response.output_text, unsafe_allow_html=True)
-
-except Exception as e:
-    st.error(f"AI summary could not load: {e}")
-
-if mode == "Analyze One Stock" and st.button("Analyze Stock"):
-    stock = get_stock_data(single_ticker)
-
-    df = pd.DataFrame([
-        {k: v for k, v in stock.items() if k != "History"}
-    ])
-
-    st.subheader("Stock Overview")
-    st.dataframe(df, width="stretch")
-
-    st.subheader("Market Signal")
-    st.metric(f"{single_ticker} Signal", get_market_signal(stock))
-
-    st.subheader("Stock Score Meter")
-    single_score = get_stock_score(stock)
-    st.write(f"{single_ticker} {'█' * int(single_score)} {single_score}/10")
-
-    st.subheader("6-Month Price Trend")
-    if not stock["History"].empty:
-        st.line_chart(stock["History"]["Close"])
-
-    st.subheader("AI Deep Analysis")
-    if "OPENAI_API_KEY" not in st.secrets:
-        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
-    else:
-       prompt = f"""
-Analyze this stock for a beginner investor.
-
-Stock:
-{stock}
-
 Return your answer in this format:
 
-## Company Overview
-Explain what the company does.
+## Which Stock Looks Stronger
+Explain which stock looks stronger right now and why.
 
-## Strengths
-List the company's main strengths.
+## Key Strengths
+List key strengths for each stock.
 
-## Risks
-List the main risks investors should know.
+## Key Risks
+List major risks investors should consider.
 
 ## Beginner-Friendly Summary
-Give a short simple explanation of whether this stock looks strong or risky for a beginner investor.
+Give a simple explanation a beginner investor could understand.
 
-Do not ask questions or add suggestions at the end.
-End the response after the summary.
+End the response after the summary and do not ask follow-up questions.
 """
 
+    try:
+        client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
+        response = client.responses.create(
+            model="gpt-4.1-mini",
+            input=prompt,
+        )
+
+        st.markdown(response.output_text, unsafe_allow_html=True)
+
+    except Exception as e:
+        st.error(f"AI summary could not load: {e}")
