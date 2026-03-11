@@ -74,8 +74,8 @@ if st.button("Analyze Stocks"):
     if not stock2["History"].empty:
         st.write(f"{ticker2} price chart")
         st.line_chart(stock2["History"]["Close"])
-
     st.subheader("AI Summary")
+    st.info("AI-generated comparison for educational purposes only. Not financial advice.")
 
     if "OPENAI_API_KEY" not in st.secrets:
         st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
@@ -107,13 +107,32 @@ Revenue Growth %: {stock2["Revenue Growth %"]}
 Net Income: {stock2["Net Income"]}
 Earnings Growth %: {stock2["Earnings Growth %"]}
 
-Give:
-- a simple comparison
-- which stock looks stronger
-- key risks for each
-- a short beginner-friendly verdict
+Return your answer in this exact format:
 
-Keep it simple and not financial advice.
+## StockSnap AI Rating
+
+### {stock1["Ticker"]}
+- Rating: BUY, HOLD, or RISKY
+- Overall Score: x/10
+- Growth Score: x/10
+- Valuation Score: x/10
+- Risk Score: x/10
+
+### {stock2["Ticker"]}
+- Rating: BUY, HOLD, or RISKY
+- Overall Score: x/10
+- Growth Score: x/10
+- Valuation Score: x/10
+- Risk Score: x/10
+
+## Winner
+State which stock looks stronger right now and why in 2-3 sentences.
+
+## Beginner Summary
+Give a short beginner-friendly summary with key risks for both stocks.
+
+Keep spacing clean and easy to read. Do not remove spaces between numbers and words.
+Not financial advice.
 """
 
         try:
@@ -122,6 +141,6 @@ Keep it simple and not financial advice.
                 model="gpt-4.1-mini",
                 input=prompt
             )
-            st.write(response.output_text)
+            st.markdown(response.output_text)
         except Exception as e:
             st.error(f"AI summary could not load: {e}")
