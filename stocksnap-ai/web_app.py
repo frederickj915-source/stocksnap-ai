@@ -8,7 +8,7 @@ st.set_page_config(page_title="StockSnap AI", page_icon="📈", layout="wide")
 st.title("📈 StockSnap AI")
 st.write("Compare two stocks using real market and financial data.")
 
-client = OpenAI()
+client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
 ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
