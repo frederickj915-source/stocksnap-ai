@@ -10,7 +10,6 @@ st.caption("AI-powered stock comparison and single-stock analysis tool")
 st.divider()
 
 st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
-st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
 
 st.subheader("📊 Market Movers Today")
 
@@ -223,4 +222,5 @@ Explain which stock looks stronger and why.
         except Exception as e:
 
             st.error(f"AI summary could not load: {e}")
+
 
