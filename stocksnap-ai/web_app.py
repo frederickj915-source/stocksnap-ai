@@ -12,6 +12,55 @@ st.divider()
 st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
 
 st.subheader("📊 Market Movers Today")
+market_mover_list = ["NVDA", "TSLA", "META", "AMD", "MSFT", "AAPL", "AMZN", "GOOGL"]
+
+def get_market_movers(tickers):
+    movers = []
+
+    for ticker in tickers:
+        try:
+            stock = yf.Ticker(ticker)
+            hist = stock.history(period="5d")
+
+            if len(hist) >= 2:
+                start_price = hist["Close"].iloc[0]
+                end_price = hist["Close"].iloc[-1]
+
+                if start_price not in [0, None]:
+                    percent_change = ((end_price - start_price) / start_price) * 100
+                    movers.append((ticker, round(percent_change, 2)))
+        except Exception:
+            pass
+
+    movers_sorted = sorted(movers, key=lambda x: x[1], reverse=True)
+
+    trending = movers_sorted[:3]
+    biggest_drop = sorted(movers, key=lambda x: x[1])[:3]
+
+    return trending, biggest_drop
+
+
+trending_stocks, biggest_drop_stocks = get_market_movers(market_mover_list)
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.markdown("### 🔥 Trending")
+    if trending_stocks:
+        for ticker, change in trending_stocks:
+            st.write(f"{ticker} ({change}%)")
+    else:
+        st.write("No trending data available.")
+
+with col2:
+    st.markdown("### 📉 Biggest Drop")
+    if biggest_drop_stocks:
+        for ticker, change in biggest_drop_stocks:
+            st.write(f"{ticker} ({change}%)")
+    else:
+        st.write("No drop data available.")
+
+st.divider()
 
 ai_stock_list = ["NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "TSM", "META", "AAPL"]
 
@@ -222,5 +271,6 @@ Explain which stock looks stronger and why.
         except Exception as e:
 
             st.error(f"AI summary could not load: {e}")
+
 
 
