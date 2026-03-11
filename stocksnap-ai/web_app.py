@@ -6,10 +6,16 @@ from openai import OpenAI
 st.set_page_config(page_title="StockSnap AI", page_icon="📈", layout="wide")
 
 st.title("📈 StockSnap AI")
-st.write("Compare two stocks using real market and financial data.")
+st.caption("AI-powered stock comparison and single-stock analysis tool")
+st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
 
-ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
-ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
+mode = st.radio("Choose analysis mode:", ["Compare Two Stocks", "Analyze One Stock"])
+
+if mode == "Compare Two Stocks":
+    ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
+    ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
+else:
+    single_ticker = st.text_input("Enter a stock ticker", value="NVDA").upper()
 
 
 def get_stock_data(ticker):
@@ -53,7 +59,7 @@ def get_stock_data(ticker):
     }
 
 
-if st.button("Analyze Stocks"):
+if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
     stock1 = get_stock_data(ticker1)
     stock2 = get_stock_data(ticker2)
 
@@ -74,6 +80,7 @@ if st.button("Analyze Stocks"):
     if not stock2["History"].empty:
         st.write(f"{ticker2} price chart")
         st.line_chart(stock2["History"]["Close"])
+
     st.subheader("AI Summary")
     st.info("AI-generated comparison for educational purposes only. Not financial advice.")
 
@@ -144,3 +151,73 @@ Not financial advice.
             st.markdown(response.output_text)
         except Exception as e:
             st.error(f"AI summary could not load: {e}")
+
+
+if mode == "Analyze One Stock" and st.button("Analyze Stock"):
+    stock = get_stock_data(single_ticker)
+
+    df = pd.DataFrame([
+        {k: v for k, v in stock.items() if k != "History"}
+    ])
+
+    st.subheader("Stock Overview")
+    st.dataframe(df, width="stretch")
+
+    st.subheader("6-Month Price Trend")
+    if not stock["History"].empty:
+        st.line_chart(stock["History"]["Close"])
+
+    st.subheader("AI Deep Analysis")
+    st.info("AI-generated analysis for educational purposes only. Not financial advice.")
+
+    if "OPENAI_API_KEY" not in st.secrets:
+        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
+    else:
+        prompt = f"""
+Analyze this stock for a beginner investor.
+
+Company: {stock["Company"]}
+Ticker: {stock["Ticker"]}
+Price: {stock["Price"]}
+Market Cap: {stock["Market Cap"]}
+P/E Ratio: {stock["P/E Ratio"]}
+Sector: {stock["Sector"]}
+Revenue: {stock["Revenue"]}
+Revenue Growth %: {stock["Revenue Growth %"]}
+Net Income: {stock["Net Income"]}
+Earnings Growth %: {stock["Earnings Growth %"]}
+
+Return your answer in this exact format:
+
+## StockSnap AI Rating
+- Rating: BUY, HOLD, or RISKY
+- Overall Score: x/10
+- Growth Score: x/10
+- Valuation Score: x/10
+- Risk Score: x/10
+
+## What the Company Does
+Give a simple 2-sentence explanation.
+
+## Strengths
+- 3 bullet points
+
+## Risks
+- 3 bullet points
+
+## Beginner Summary
+Give a short beginner-friendly summary.
+
+Keep spacing clean and easy to read.
+Not financial advice.
+"""
+
+        try:
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=prompt
+            )
+            st.markdown(response.output_text)
+        except Exception as e:
+            st.error(f"AI analysis could not load: {e}")
