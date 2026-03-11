@@ -268,16 +268,17 @@ Stock 2:
 
 Explain which stock looks stronger and why.
 """
-        try:
-            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-            response = client.responses.create(
-                model="gpt-4.1-mini",
-                input=prompt,
-            )
-st.markdown(response.output_text, unsafe_allow_html=True)
-        except Exception as e:
-            st.error(f"AI summary could not load: {e}")
+try:
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt,
+    )
 
+    st.markdown(response.output_text, unsafe_allow_html=True)
+
+except Exception as e:
+    st.error(f"AI summary could not load: {e}")
 
 if mode == "Analyze One Stock" and st.button("Analyze Stock"):
     stock = get_stock_data(single_ticker)
@@ -327,4 +328,5 @@ Give a short simple explanation of whether this stock looks strong or risky for 
 Do not ask questions or add suggestions at the end.
 End the response after the summary.
 """
+
 
