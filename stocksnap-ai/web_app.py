@@ -274,7 +274,7 @@ Explain which stock looks stronger and why.
                 model="gpt-4.1-mini",
                 input=prompt,
             )
-            st.markdown(response.output_text)
+st.markdown(response.output_text, unsafe_allow_html=True)
         except Exception as e:
             st.error(f"AI summary could not load: {e}")
 
@@ -327,3 +327,4 @@ Give a short simple explanation of whether this stock looks strong or risky for 
 Do not ask questions or add suggestions at the end.
 End the response after the summary.
 """
+
