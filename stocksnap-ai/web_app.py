@@ -12,6 +12,7 @@ st.divider()
 st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
 
 st.subheader("📊 Market Movers Today")
+
 market_mover_list = ["NVDA", "TSLA", "META", "AMD", "MSFT", "AAPL", "AMZN", "GOOGL"]
 
 def get_market_movers(tickers):
@@ -33,12 +34,10 @@ def get_market_movers(tickers):
             pass
 
     movers_sorted = sorted(movers, key=lambda x: x[1], reverse=True)
-
     trending = movers_sorted[:3]
     biggest_drop = sorted(movers, key=lambda x: x[1])[:3]
 
     return trending, biggest_drop
-
 
 trending_stocks, biggest_drop_stocks = get_market_movers(market_mover_list)
 
@@ -65,16 +64,12 @@ st.divider()
 ai_stock_list = ["NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "TSM", "META", "AAPL"]
 
 st.subheader("🔥 Top AI Stocks")
-
 selected_ai_stock = st.selectbox(
     "Pick a popular AI-related stock for quick analysis:",
     ["None"] + ai_stock_list
 )
 
-mode = st.radio(
-    "Choose analysis mode:",
-    ["Compare Two Stocks", "Analyze One Stock"]
-)
+mode = st.radio("Choose analysis mode:", ["Compare Two Stocks", "Analyze One Stock"])
 
 if mode == "Compare Two Stocks":
     ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
@@ -85,7 +80,6 @@ else:
 
 
 def get_stock_data(ticker):
-
     stock = yf.Ticker(ticker)
     info = stock.info
     income_stmt = stock.financials
@@ -98,51 +92,31 @@ def get_stock_data(ticker):
     operating_margin = "N/A"
 
     if not income_stmt.empty:
-
         if "Total Revenue" in income_stmt.index:
-
             revenue_series = income_stmt.loc["Total Revenue"]
-
             revenue = revenue_series.iloc[0]
-
             if len(revenue_series) > 1 and revenue_series.iloc[1] not in [0, None]:
-
-                revenue_growth = (
-                    (revenue_series.iloc[0] - revenue_series.iloc[1])
-                    / revenue_series.iloc[1]
-                ) * 100
+                revenue_growth = ((revenue_series.iloc[0] - revenue_series.iloc[1]) / revenue_series.iloc[1]) * 100
 
         if "Net Income" in income_stmt.index:
-
             income_series = income_stmt.loc["Net Income"]
-
             net_income = income_series.iloc[0]
-
             if len(income_series) > 1 and income_series.iloc[1] not in [0, None]:
-
-                earnings_growth = (
-                    (income_series.iloc[0] - income_series.iloc[1])
-                    / income_series.iloc[1]
-                ) * 100
+                earnings_growth = ((income_series.iloc[0] - income_series.iloc[1]) / income_series.iloc[1]) * 100
 
         if "Gross Profit" in income_stmt.index and "Total Revenue" in income_stmt.index:
-
             gross_profit = income_stmt.loc["Gross Profit"].iloc[0]
             total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
-
             if total_revenue not in [0, None]:
                 gross_margin = (gross_profit / total_revenue) * 100
 
         if "Operating Income" in income_stmt.index and "Total Revenue" in income_stmt.index:
-
             operating_income = income_stmt.loc["Operating Income"].iloc[0]
             total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
-
             if total_revenue not in [0, None]:
                 operating_margin = (operating_income / total_revenue) * 100
 
     hist = stock.history(period="6mo")
-
     latest_close = hist["Close"].iloc[-1] if not hist.empty else "N/A"
 
     return {
@@ -158,12 +132,11 @@ def get_stock_data(ticker):
         "Earnings Growth %": earnings_growth,
         "Gross Margin %": gross_margin,
         "Operating Margin %": operating_margin,
-        "History": hist,
+        "History": hist
     }
 
 
 def get_market_signal(stock):
-
     score = 0
 
     if stock["Revenue Growth %"] != "N/A":
@@ -208,43 +181,82 @@ def get_market_signal(stock):
         return "🔴 Risky"
 
 
-if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
+def get_stock_score(stock):
+    score = 5.0
 
+    if stock["Revenue Growth %"] != "N/A":
+        if stock["Revenue Growth %"] > 20:
+            score += 1.5
+        elif stock["Revenue Growth %"] > 5:
+            score += 0.5
+        elif stock["Revenue Growth %"] < 0:
+            score -= 1
+
+    if stock["Earnings Growth %"] != "N/A":
+        if stock["Earnings Growth %"] > 20:
+            score += 1.5
+        elif stock["Earnings Growth %"] > 5:
+            score += 0.5
+        elif stock["Earnings Growth %"] < 0:
+            score -= 1
+
+    if stock["Gross Margin %"] != "N/A":
+        if stock["Gross Margin %"] > 50:
+            score += 1
+        elif stock["Gross Margin %"] < 20:
+            score -= 0.5
+
+    if stock["Operating Margin %"] != "N/A":
+        if stock["Operating Margin %"] > 20:
+            score += 1
+        elif stock["Operating Margin %"] < 5:
+            score -= 0.5
+
+    if stock["P/E Ratio"] != "N/A":
+        if stock["P/E Ratio"] > 60:
+            score -= 1
+        elif stock["P/E Ratio"] < 25:
+            score += 0.5
+
+    score = max(1.0, min(score, 10.0))
+    return round(score, 1)
+
+
+if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
     stock1 = get_stock_data(ticker1)
     stock2 = get_stock_data(ticker2)
 
     df = pd.DataFrame([
         {k: v for k, v in stock1.items() if k != "History"},
-        {k: v for k, v in stock2.items() if k != "History"},
+        {k: v for k, v in stock2.items() if k != "History"}
     ])
 
     st.subheader("Stock Comparison")
     st.dataframe(df, width="stretch")
 
     st.subheader("Market Signal")
-
     col1, col2 = st.columns(2)
-
     with col1:
         st.metric(f"{ticker1} Signal", get_market_signal(stock1))
-
     with col2:
         st.metric(f"{ticker2} Signal", get_market_signal(stock2))
 
-    st.subheader("6-Month Price Trend")
+    st.subheader("Stock Score Meter")
+    score1 = get_stock_score(stock1)
+    score2 = get_stock_score(stock2)
+    st.write(f"{ticker1} {'█' * int(score1)} {score1}/10")
+    st.write(f"{ticker2} {'█' * int(score2)} {score2}/10")
 
+    st.subheader("6-Month Price Trend")
     if not stock1["History"].empty:
         st.line_chart(stock1["History"]["Close"])
-
     if not stock2["History"].empty:
         st.line_chart(stock2["History"]["Close"])
 
     st.subheader("AI Summary")
-
     if "OPENAI_API_KEY" not in st.secrets:
         st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
     else:
-
         prompt = f"""
 Compare these two stocks for a beginner investor.
 
@@ -256,21 +268,56 @@ Stock 2:
 
 Explain which stock looks stronger and why.
 """
-
         try:
-
             client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
             response = client.responses.create(
                 model="gpt-4.1-mini",
                 input=prompt,
             )
-
             st.markdown(response.output_text)
-
         except Exception as e:
-
             st.error(f"AI summary could not load: {e}")
 
 
+if mode == "Analyze One Stock" and st.button("Analyze Stock"):
+    stock = get_stock_data(single_ticker)
 
+    df = pd.DataFrame([
+        {k: v for k, v in stock.items() if k != "History"}
+    ])
+
+    st.subheader("Stock Overview")
+    st.dataframe(df, width="stretch")
+
+    st.subheader("Market Signal")
+    st.metric(f"{single_ticker} Signal", get_market_signal(stock))
+
+    st.subheader("Stock Score Meter")
+    single_score = get_stock_score(stock)
+    st.write(f"{single_ticker} {'█' * int(single_score)} {single_score}/10")
+
+    st.subheader("6-Month Price Trend")
+    if not stock["History"].empty:
+        st.line_chart(stock["History"]["Close"])
+
+    st.subheader("AI Deep Analysis")
+    if "OPENAI_API_KEY" not in st.secrets:
+        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
+    else:
+        prompt = f"""
+Analyze this stock for a beginner investor.
+
+Stock:
+{stock}
+
+Explain what the company does, strengths, risks, and give a beginner-friendly summary.
+"""
+        try:
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=prompt,
+            )
+            st.markdown(response.output_text)
+        except Exception as e:
+            st.error(f"AI analysis could not load: {e}")
