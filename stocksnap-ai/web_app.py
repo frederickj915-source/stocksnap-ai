@@ -8,8 +8,6 @@ st.set_page_config(page_title="StockSnap AI", page_icon="📈", layout="wide")
 st.title("📈 StockSnap AI")
 st.write("Compare two stocks using real market and financial data.")
 
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
-
 ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
 ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
 
@@ -65,7 +63,7 @@ if st.button("Analyze Stocks"):
     ])
 
     st.subheader("Stock Comparison")
-    st.dataframe(df, use_container_width=True)
+    st.dataframe(df, width="stretch")
 
     st.subheader("6-Month Price Trend")
 
@@ -79,7 +77,10 @@ if st.button("Analyze Stocks"):
 
     st.subheader("AI Summary")
 
-    prompt = f"""
+    if "OPENAI_API_KEY" not in st.secrets:
+        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
+    else:
+        prompt = f"""
 Compare these two stocks for a beginner investor.
 
 Stock 1:
@@ -115,11 +116,12 @@ Give:
 Keep it simple and not financial advice.
 """
 
-    try:
-        response = client.responses.create(
-            model="gpt-5.4",
-            input=prompt
-        )
-        st.write(response.output_text)
-    except Exception as e:
-        st.error(f"AI summary could not load: {e}")
+        try:
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=prompt
+            )
+            st.write(response.output_text)
+        except Exception as e:
+            st.error(f"AI summary could not load: {e}")
