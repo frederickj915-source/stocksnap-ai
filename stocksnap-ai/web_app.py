@@ -258,7 +258,6 @@ if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
 if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
 else:
- else:
 
     prompt = f"""
 Compare these two stocks for a beginner investor.
@@ -297,4 +296,5 @@ End the response after the summary and do not ask follow-up questions.
 
     except Exception as e:
         st.error(f"AI summary could not load: {e}")
+
 
