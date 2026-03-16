@@ -270,20 +270,25 @@ else:
 
  prompt = f"""
 Compare these two stocks for a beginner investor.
+rev1 = stock1["Revenue"]
+net1 = stock1["Net Income"]
+growth1 = stock1["Revenue Growth"]
+margin1 = stock1["Gross Margin"]
 
+rev2 = stock2["Revenue"]
+net2 = stock2["Net Income"]
+growth2 = stock2["Revenue Growth"]
+margin2 = stock2["Gross Margin"]
 Stock 1: {ticker1}
-Revenue: {stock1.get("Revenue", "N/A")}
-Net Income: {stock1.get("Net Income", "N/A")}
-Revenue Growth: {stock1.get("Revenue Growth", "N/A")}
-Gross Margin: {stock1.get("Gross Margin", "N/A")}
-
+Revenue: {rev1}
+Net Income: {net1}
+Revenue Growth: {growth1}
+Gross Margin: {margin1}
 Stock 2: {ticker2}
-Revenue: {stock2.get("Revenue", "N/A")}
-Net Income: {stock2.get("Net Income", "N/A")}
-Revenue Growth: {stock2.get("Revenue Growth", "N/A")}
-Gross Margin: {stock2.get("Gross Margin", "N/A")}
-Return your answer in this format:
-
+Revenue: {rev2}
+Net Income: {net2}
+Revenue Growth: {growth2}
+Gross Margin: {margin2}
 ## Which Stock Looks Stronger
 Explain which stock looks stronger right now and why.
 
