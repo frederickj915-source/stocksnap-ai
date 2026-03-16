@@ -287,7 +287,7 @@ List major risks investors should consider.
 Give a simple explanation a beginner investor could understand.
 
 End the response after the summary and do not ask follow-up questions.
-"""
+
     try:
         client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
