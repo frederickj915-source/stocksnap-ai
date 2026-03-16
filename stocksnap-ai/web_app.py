@@ -278,11 +278,10 @@ List key strengths for each stock.
 
 ## Risks
 Mention possible risks for each stock.
-"""
 
 ## Key Risks
 List major risks investors should consider.
-
+"""
 ## Beginner-Friendly Summary
 Give a simple explanation a beginner investor could understand.
 
