@@ -281,10 +281,10 @@ Mention possible risks for each stock.
 
 ## Key Risks
 List major risks investors should consider.
-"""
+
 ## Beginner-Friendly Summary
 Give a simple explanation a beginner investor could understand.
-
+"""
 End the response after the summary and do not ask follow-up questions.
 
     try:
