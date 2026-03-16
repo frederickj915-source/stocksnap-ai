@@ -259,7 +259,7 @@ if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
 else:
 
-prompt = f"""
+    prompt = f"""
 Compare these two stocks for a beginner investor.
 
 Stock 1:
