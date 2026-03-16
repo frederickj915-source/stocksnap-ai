@@ -294,7 +294,7 @@ Revenue Growth: {growth2}
 Gross Margin: {margin2}
 
 Return your answer in this format:
-"""
+
 ## Which Stock Looks Stronger
 Explain which stock looks stronger right now and why.
 
