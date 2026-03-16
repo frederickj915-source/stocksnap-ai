@@ -252,7 +252,8 @@ if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
         st.line_chart(stock1["History"]["Close"])
     if not stock2["History"].empty:
         st.line_chart(stock2["History"]["Close"])
-
+stock1 = st.text_input("Enter first stock ticker")
+stock2 = st.text_input("Enter second stock ticker")
 st.subheader("AI Summary")
 
 if "OPENAI_API_KEY" not in st.secrets:
