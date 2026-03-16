@@ -299,17 +299,15 @@ Give a simple explanation a beginner investor could understand.
 
 End the response after the summary and do not ask follow-up questions.
 """
- try:
-        client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+try:
+    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=prompt,
-        )
+    response = client.responses.create(
+        model="gpt-4.1-mini",
+        input=prompt,
+    )
 
-        st.markdown(response.output_text, unsafe_allow_html=True)
+    st.markdown(response.output_text, unsafe_allow_html=True)
 
-    except Exception as e:
-        st.error(f"AI summary could not load: {e}")
-
-
+except Exception as e:
+    st.error(f"AI summary could not load: {e}")
