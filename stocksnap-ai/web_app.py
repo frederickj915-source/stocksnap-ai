@@ -275,6 +275,9 @@ Explain which stock looks stronger right now and why.
 
 ## Key Strengths
 List key strengths for each stock.
+
+## Risks
+Mention possible risks for each stock.
 """
 
 ## Key Risks
