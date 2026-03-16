@@ -253,7 +253,7 @@ if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
     if not stock2["History"].empty:
         st.line_chart(stock2["History"]["Close"])
 
- st.subheader("AI Summary")
+st.subheader("AI Summary")
 
 if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
