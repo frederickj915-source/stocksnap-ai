@@ -3,320 +3,221 @@ import yfinance as yf
 import pandas as pd
 from openai import OpenAI
 
-st.set_page_config(page_title="StockSnap AI", page_icon="📈", layout="wide")
 
-st.title("📈 StockSnap AI")
-st.caption("AI-powered stock comparison and single-stock analysis tool")
-st.divider()
+st.set_page_config(page_title="StockSnap AI", layout="wide")
 
-st.write("Use real market data, growth trends, and AI summaries to analyze stocks.")
-
-st.subheader("📊 Market Movers Today")
-
-market_mover_list = ["NVDA", "TSLA", "META", "AMD", "MSFT", "AAPL", "AMZN", "GOOGL"]
-
-def get_market_movers(tickers):
-    movers = []
-
-    for ticker in tickers:
-        try:
-            stock = yf.Ticker(ticker)
-            hist = stock.history(period="5d")
-
-            if len(hist) >= 2:
-                start_price = hist["Close"].iloc[0]
-                end_price = hist["Close"].iloc[-1]
-
-                if start_price not in [0, None]:
-                    percent_change = ((end_price - start_price) / start_price) * 100
-                    movers.append((ticker, round(percent_change, 2)))
-        except Exception:
-            pass
-
-    movers_sorted = sorted(movers, key=lambda x: x[1], reverse=True)
-    trending = movers_sorted[:3]
-    biggest_drop = sorted(movers, key=lambda x: x[1])[:3]
-
-    return trending, biggest_drop
-
-trending_stocks, biggest_drop_stocks = get_market_movers(market_mover_list)
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("### 🔥 Trending")
-    if trending_stocks:
-        for ticker, change in trending_stocks:
-            st.write(f"{ticker} ({change}%)")
-    else:
-        st.write("No trending data available.")
-
-with col2:
-    st.markdown("### 📉 Biggest Drop")
-    if biggest_drop_stocks:
-        for ticker, change in biggest_drop_stocks:
-            st.write(f"{ticker} ({change}%)")
-    else:
-        st.write("No drop data available.")
-
-st.divider()
-
-ai_stock_list = ["NVDA", "AMD", "MSFT", "GOOGL", "AMZN", "TSM", "META", "AAPL"]
-
-st.subheader("🔥 Top AI Stocks")
-selected_ai_stock = st.selectbox(
-    "Pick a popular AI-related stock for quick analysis:",
-    ["None"] + ai_stock_list
-)
-
-mode = st.radio("Choose analysis mode:", ["Compare Two Stocks", "Analyze One Stock"])
-
-if mode == "Compare Two Stocks":
-    ticker1 = st.text_input("Enter first stock ticker", value="NVDA").upper()
-    ticker2 = st.text_input("Enter second stock ticker", value="AMD").upper()
-else:
-    default_single = selected_ai_stock if selected_ai_stock != "None" else "NVDA"
-    single_ticker = st.text_input("Enter a stock ticker", value=default_single).upper()
+st.title("StockSnap AI")
+st.write("Compare two stocks in simple beginner-friendly language.")
 
 
-def get_stock_data(ticker):
+@st.cache_data(ttl=600)
+def get_stock_data(ticker: str) -> dict:
     stock = yf.Ticker(ticker)
 
+    # Price history
+    try:
+        history = stock.history(period="6mo")
+    except Exception:
+        history = pd.DataFrame()
+
+    # Basic info
     try:
         info = stock.info
     except Exception:
         info = {}
 
-    try:
-        income_stmt = stock.financials
-    except Exception:
-        income_stmt = pd.DataFrame()
-
-    revenue = "N/A"
-    net_income = "N/A"
-    revenue_growth = "N/A"
-    earnings_growth = "N/A"
-    gross_margin = "N/A"
-    operating_margin = "N/A"
-
-    if not income_stmt.empty:
-        if "Total Revenue" in income_stmt.index:
-            revenue_series = income_stmt.loc["Total Revenue"]
-            revenue = revenue_series.iloc[0]
-            if len(revenue_series) > 1 and revenue_series.iloc[1] not in [0, None]:
-                revenue_growth = ((revenue_series.iloc[0] - revenue_series.iloc[1]) / revenue_series.iloc[1]) * 100
-
-        if "Net Income" in income_stmt.index:
-            income_series = income_stmt.loc["Net Income"]
-            net_income = income_series.iloc[0]
-            if len(income_series) > 1 and income_series.iloc[1] not in [0, None]:
-                earnings_growth = ((income_series.iloc[0] - income_series.iloc[1]) / income_series.iloc[1]) * 100
-
-        if "Gross Profit" in income_stmt.index and "Total Revenue" in income_stmt.index:
-            gross_profit = income_stmt.loc["Gross Profit"].iloc[0]
-            total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
-            if total_revenue not in [0, None]:
-                gross_margin = (gross_profit / total_revenue) * 100
-
-        if "Operating Income" in income_stmt.index and "Total Revenue" in income_stmt.index:
-            operating_income = income_stmt.loc["Operating Income"].iloc[0]
-            total_revenue = income_stmt.loc["Total Revenue"].iloc[0]
-            if total_revenue not in [0, None]:
-                operating_margin = (operating_income / total_revenue) * 100
-
-    hist = stock.history(period="6mo")
-    latest_close = hist["Close"].iloc[-1] if not hist.empty else "N/A"
+    revenue = info.get("totalRevenue", "N/A")
+    net_income = info.get("netIncomeToCommon", "N/A")
+    gross_margin = info.get("grossMargins", "N/A")
+    operating_margin = info.get("operatingMargins", "N/A")
+    revenue_growth = info.get("revenueGrowth", "N/A")
+    earnings_growth = info.get("earningsGrowth", "N/A")
+    current_price = info.get("currentPrice", "N/A")
+    market_cap = info.get("marketCap", "N/A")
+    pe_ratio = info.get("trailingPE", "N/A")
+    forward_pe = info.get("forwardPE", "N/A")
 
     return {
-        "Company": info.get("longName", "N/A"),
-        "Ticker": ticker,
-        "Price": info.get("currentPrice", latest_close),
-        "Market Cap": info.get("marketCap", "N/A"),
-        "P/E Ratio": info.get("trailingPE", "N/A"),
-        "Sector": info.get("sector", "N/A"),
+        "Ticker": ticker.upper(),
+        "History": history,
+        "Info": info,
         "Revenue": revenue,
-        "Revenue Growth %": revenue_growth,
         "Net Income": net_income,
-        "Earnings Growth %": earnings_growth,
-        "Gross Margin %": gross_margin,
-        "Operating Margin %": operating_margin,
-        "History": hist
+        "Gross Margin": gross_margin,
+        "Operating Margin": operating_margin,
+        "Revenue Growth": revenue_growth,
+        "Earnings Growth": earnings_growth,
+        "Current Price": current_price,
+        "Market Cap": market_cap,
+        "PE Ratio": pe_ratio,
+        "Forward PE": forward_pe,
     }
 
 
-def get_market_signal(stock):
-    score = 0
+def format_value(value):
+    if value in [None, "", "N/A"]:
+        return "N/A"
 
-    if stock["Revenue Growth %"] != "N/A":
-        if stock["Revenue Growth %"] > 20:
-            score += 2
-        elif stock["Revenue Growth %"] > 5:
-            score += 1
-        elif stock["Revenue Growth %"] < 0:
-            score -= 1
+    if isinstance(value, (int, float)):
+        # Percent-like values from yfinance often come as decimals
+        if -1 < value < 1 and value != 0:
+            return f"{value:.2%}"
 
-    if stock["Earnings Growth %"] != "N/A":
-        if stock["Earnings Growth %"] > 20:
-            score += 2
-        elif stock["Earnings Growth %"] > 5:
-            score += 1
-        elif stock["Earnings Growth %"] < 0:
-            score -= 1
+        abs_value = abs(value)
+        if abs_value >= 1_000_000_000_000:
+            return f"${value / 1_000_000_000_000:.2f}T"
+        if abs_value >= 1_000_000_000:
+            return f"${value / 1_000_000_000:.2f}B"
+        if abs_value >= 1_000_000:
+            return f"${value / 1_000_000:.2f}M"
+        if abs_value >= 1_000:
+            return f"${value / 1_000:.2f}K"
 
-    if stock["P/E Ratio"] != "N/A":
-        if stock["P/E Ratio"] < 25:
-            score += 1
-        elif stock["P/E Ratio"] > 60:
-            score -= 1
+        return f"{value:.2f}"
 
-    if stock["Gross Margin %"] != "N/A":
-        if stock["Gross Margin %"] > 50:
-            score += 1
-        elif stock["Gross Margin %"] < 20:
-            score -= 1
-
-    if stock["Operating Margin %"] != "N/A":
-        if stock["Operating Margin %"] > 20:
-            score += 1
-        elif stock["Operating Margin %"] < 5:
-            score -= 1
-
-    if score >= 5:
-        return "🟢 Bullish"
-    elif score >= 2:
-        return "🟡 Neutral"
-    else:
-        return "🔴 Risky"
+    return str(value)
 
 
-def get_stock_score(stock):
-    score = 5.0
+ticker1 = st.text_input("Enter first stock ticker", placeholder="AAPL")
+ticker2 = st.text_input("Enter second stock ticker", placeholder="MSFT")
 
-    if stock["Revenue Growth %"] != "N/A":
-        if stock["Revenue Growth %"] > 20:
-            score += 1.5
-        elif stock["Revenue Growth %"] > 5:
-            score += 0.5
-        elif stock["Revenue Growth %"] < 0:
-            score -= 1
+analyze = st.button("Analyze Stocks")
 
-    if stock["Earnings Growth %"] != "N/A":
-        if stock["Earnings Growth %"] > 20:
-            score += 1.5
-        elif stock["Earnings Growth %"] > 5:
-            score += 0.5
-        elif stock["Earnings Growth %"] < 0:
-            score -= 1
+if analyze:
+    if not ticker1 or not ticker2:
+        st.warning("Please enter two stock tickers.")
+        st.stop()
 
-    if stock["Gross Margin %"] != "N/A":
-        if stock["Gross Margin %"] > 50:
-            score += 1
-        elif stock["Gross Margin %"] < 20:
-            score -= 0.5
+    try:
+        data1 = get_stock_data(ticker1.strip().upper())
+        data2 = get_stock_data(ticker2.strip().upper())
+    except Exception as e:
+        st.error(f"Could not load stock data: {e}")
+        st.stop()
 
-    if stock["Operating Margin %"] != "N/A":
-        if stock["Operating Margin %"] > 20:
-            score += 1
-        elif stock["Operating Margin %"] < 5:
-            score -= 0.5
-
-    if stock["P/E Ratio"] != "N/A":
-        if stock["P/E Ratio"] > 60:
-            score -= 1
-        elif stock["P/E Ratio"] < 25:
-            score += 0.5
-
-    score = max(1.0, min(score, 10.0))
-    return round(score, 1)
-
-
-if mode == "Compare Two Stocks" and st.button("Analyze Stocks"):
-    stock1 = get_stock_data(ticker1)
-    stock2 = get_stock_data(ticker2)
-
-    df = pd.DataFrame([
-        {k: v for k, v in stock1.items() if k != "History"},
-        {k: v for k, v in stock2.items() if k != "History"}
-    ])
-
-    st.subheader("Stock Comparison")
-    st.dataframe(df, width="stretch")
-
-    st.subheader("Market Signal")
     col1, col2 = st.columns(2)
-    with col1:
-        st.metric(f"{ticker1} Signal", get_market_signal(stock1))
-    with col2:
-        st.metric(f"{ticker2} Signal", get_market_signal(stock2))
 
-    st.subheader("Stock Score Meter")
-    score1 = get_stock_score(stock1)
-    score2 = get_stock_score(stock2)
-    st.write(f"{ticker1} {'█' * int(score1)} {score1}/10")
-    st.write(f"{ticker2} {'█' * int(score2)} {score2}/10")
+    with col1:
+        st.subheader(f"{data1['Ticker']} Snapshot")
+        st.write(f"**Current Price:** {format_value(data1['Current Price'])}")
+        st.write(f"**Market Cap:** {format_value(data1['Market Cap'])}")
+        st.write(f"**Revenue:** {format_value(data1['Revenue'])}")
+        st.write(f"**Net Income:** {format_value(data1['Net Income'])}")
+        st.write(f"**Revenue Growth:** {format_value(data1['Revenue Growth'])}")
+        st.write(f"**Earnings Growth:** {format_value(data1['Earnings Growth'])}")
+        st.write(f"**Gross Margin:** {format_value(data1['Gross Margin'])}")
+        st.write(f"**Operating Margin:** {format_value(data1['Operating Margin'])}")
+        st.write(f"**P/E Ratio:** {format_value(data1['PE Ratio'])}")
+        st.write(f"**Forward P/E:** {format_value(data1['Forward PE'])}")
+
+    with col2:
+        st.subheader(f"{data2['Ticker']} Snapshot")
+        st.write(f"**Current Price:** {format_value(data2['Current Price'])}")
+        st.write(f"**Market Cap:** {format_value(data2['Market Cap'])}")
+        st.write(f"**Revenue:** {format_value(data2['Revenue'])}")
+        st.write(f"**Net Income:** {format_value(data2['Net Income'])}")
+        st.write(f"**Revenue Growth:** {format_value(data2['Revenue Growth'])}")
+        st.write(f"**Earnings Growth:** {format_value(data2['Earnings Growth'])}")
+        st.write(f"**Gross Margin:** {format_value(data2['Gross Margin'])}")
+        st.write(f"**Operating Margin:** {format_value(data2['Operating Margin'])}")
+        st.write(f"**P/E Ratio:** {format_value(data2['PE Ratio'])}")
+        st.write(f"**Forward P/E:** {format_value(data2['Forward PE'])}")
 
     st.subheader("6-Month Price Trend")
-    if not stock1["History"].empty:
-        st.line_chart(stock1["History"]["Close"])
-    if not stock2["History"].empty:
-        st.line_chart(stock2["History"]["Close"])
-stock1 = st.text_input("Enter first stock ticker")
-stock2 = st.text_input("Enter second stock ticker")
-st.subheader("AI Summary")
 
-if "OPENAI_API_KEY" not in st.secrets:
-    st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
-else:
-    rev1 = stock1["Info"].get("Revenue", "N/A")
-    net1 = stock1["Info"].get("Net Income", "N/A")
-    growth1 = stock1["Info"].get("Revenue Growth", "N/A")
-    margin1 = stock1["Info"].get("Gross Margin", "N/A")
+    chart_col1, chart_col2 = st.columns(2)
 
-    rev2 = stock2["Info"].get("Revenue", "N/A")
-    net2 = stock2["Info"].get("Net Income", "N/A")
-    growth2 = stock2["Info"].get("Revenue Growth", "N/A")
-    margin2 = stock2["Info"].get("Gross Margin", "N/A")
+    with chart_col1:
+        if not data1["History"].empty and "Close" in data1["History"]:
+            st.write(f"**{data1['Ticker']}**")
+            st.line_chart(data1["History"]["Close"])
+        else:
+            st.info(f"No chart data available for {data1['Ticker']}.")
 
-prompt = f"""
+    with chart_col2:
+        if not data2["History"].empty and "Close" in data2["History"]:
+            st.write(f"**{data2['Ticker']}**")
+            st.line_chart(data2["History"]["Close"])
+        else:
+            st.info(f"No chart data available for {data2['Ticker']}.")
+
+    st.subheader("AI Summary")
+
+    if "OPENAI_API_KEY" not in st.secrets:
+        st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
+    else:
+        rev1 = format_value(data1["Revenue"])
+        net1 = format_value(data1["Net Income"])
+        growth1 = format_value(data1["Revenue Growth"])
+        earn_growth1 = format_value(data1["Earnings Growth"])
+        gross1 = format_value(data1["Gross Margin"])
+        op1 = format_value(data1["Operating Margin"])
+        price1 = format_value(data1["Current Price"])
+        cap1 = format_value(data1["Market Cap"])
+        pe1 = format_value(data1["PE Ratio"])
+        fpe1 = format_value(data1["Forward PE"])
+
+        rev2 = format_value(data2["Revenue"])
+        net2 = format_value(data2["Net Income"])
+        growth2 = format_value(data2["Revenue Growth"])
+        earn_growth2 = format_value(data2["Earnings Growth"])
+        gross2 = format_value(data2["Gross Margin"])
+        op2 = format_value(data2["Operating Margin"])
+        price2 = format_value(data2["Current Price"])
+        cap2 = format_value(data2["Market Cap"])
+        pe2 = format_value(data2["PE Ratio"])
+        fpe2 = format_value(data2["Forward PE"])
+
+        prompt = f"""
 Compare these two stocks for a beginner investor.
 
-Stock 1: {ticker1}
+Stock 1: {data1["Ticker"]}
+Current Price: {price1}
+Market Cap: {cap1}
 Revenue: {rev1}
 Net Income: {net1}
 Revenue Growth: {growth1}
-Gross Margin: {margin1}
+Earnings Growth: {earn_growth1}
+Gross Margin: {gross1}
+Operating Margin: {op1}
+P/E Ratio: {pe1}
+Forward P/E: {fpe1}
 
-Stock 2: {ticker2}
+Stock 2: {data2["Ticker"]}
+Current Price: {price2}
+Market Cap: {cap2}
 Revenue: {rev2}
 Net Income: {net2}
 Revenue Growth: {growth2}
-Gross Margin: {margin2}
+Earnings Growth: {earn_growth2}
+Gross Margin: {gross2}
+Operating Margin: {op2}
+P/E Ratio: {pe2}
+Forward P/E: {fpe2}
 
 Return your answer in this format:
 
 ## Which Stock Looks Stronger
-Explain which stock looks stronger right now and why.
+Say which stock currently looks stronger for a beginner investor and why.
 
 ## Key Strengths
-List key strengths for each stock.
+List the biggest strengths of each stock.
 
 ## Risks
-Mention possible risks for each stock.
+Mention the main risks for each stock.
 
-## Simple Explanation
+## Beginner Takeaway
 Give a simple explanation a beginner investor could understand.
 
-End the response after the summary and do not ask follow-up questions.
+Keep it concise. Do not ask follow-up questions.
 """
-try:
-    client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt,
-    )
-
-    st.markdown(response.output_text, unsafe_allow_html=True)
-
-except Exception as e:
-    st.error(f"AI summary could not load: {e}")
+        try:
+            client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=prompt,
+            )
+            st.markdown(response.output_text)
+        except Exception as e:
+            st.error(f"AI summary could not load: {e}")
