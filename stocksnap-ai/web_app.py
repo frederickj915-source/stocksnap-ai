@@ -267,15 +267,15 @@ st.subheader("AI Summary")
 if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
 else:
-    rev1 = stock1.get("Revenue", "N/A")
-    net1 = stock1.get("Net Income", "N/A")
-    growth1 = stock1.get("Revenue Growth", "N/A")
-    margin1 = stock1.get("Gross Margin", "N/A")
+    rev1 = stock1["Revenue"]
+    net1 = stock1["Net Income"]
+    growth1 = stock1["Revenue Growth"]
+    margin1 = stock1["Gross Margin"]
 
-    rev2 = stock2.get("Revenue", "N/A")
-    net2 = stock2.get("Net Income", "N/A")
-    growth2 = stock2.get("Revenue Growth", "N/A")
-    margin2 = stock2.get("Gross Margin", "N/A")
+    rev2 = stock2["Revenue"]
+    net2 = stock2["Net Income"]
+    growth2 = stock2["Revenue Growth"]
+    margin2 = stock2["Gross Margin"]
 
 prompt = f"""
 Compare these two stocks for a beginner investor.
