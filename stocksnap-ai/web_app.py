@@ -272,16 +272,16 @@ else:
 Compare these two stocks for a beginner investor.
 
 Stock 1: {ticker1}
-Revenue: {stock1["Revenue"]}
-Net Income: {stock1["Net Income"]}
-Revenue Growth: {stock1["Revenue Growth"]}
-Gross Margin: {stock1["Gross Margin"]}
-Stock 2: {ticker2}
-Revenue: {stock1["Revenue"]}
-Net Income: {stock1["Net Income"]}
-Revenue Growth: {stock1["Revenue Growth"]}
-Gross Margin: {stock1["Gross Margin"]}
+Revenue: {stock1.get("Revenue", "N/A")}
+Net Income: {stock1.get("Net Income", "N/A")}
+Revenue Growth: {stock1.get("Revenue Growth", "N/A")}
+Gross Margin: {stock1.get("Gross Margin", "N/A")}
 
+Stock 2: {ticker2}
+Revenue: {stock2.get("Revenue", "N/A")}
+Net Income: {stock2.get("Net Income", "N/A")}
+Revenue Growth: {stock2.get("Revenue Growth", "N/A")}
+Gross Margin: {stock2.get("Gross Margin", "N/A")}
 Return your answer in this format:
 
 ## Which Stock Looks Stronger
