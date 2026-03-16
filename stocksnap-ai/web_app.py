@@ -263,10 +263,10 @@ prompt = f"""
 Compare these two stocks for a beginner investor.
 
 Stock 1:
-{ticker1}
+{stock1}
 
 Stock 2:
-{ticker2}
+{stock2}
 
 Return your answer in this format:
 
