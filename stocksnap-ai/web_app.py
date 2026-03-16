@@ -268,8 +268,6 @@ if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
 else:
 
- prompt = f"""
-Compare these two stocks for a beginner investor.
 rev1 = stock1["Revenue"]
 net1 = stock1["Net Income"]
 growth1 = stock1["Revenue Growth"]
@@ -279,16 +277,24 @@ rev2 = stock2["Revenue"]
 net2 = stock2["Net Income"]
 growth2 = stock2["Revenue Growth"]
 margin2 = stock2["Gross Margin"]
+
+prompt = f"""
+Compare these two stocks for a beginner investor.
+
 Stock 1: {ticker1}
 Revenue: {rev1}
 Net Income: {net1}
 Revenue Growth: {growth1}
 Gross Margin: {margin1}
+
 Stock 2: {ticker2}
 Revenue: {rev2}
 Net Income: {net2}
 Revenue Growth: {growth2}
 Gross Margin: {margin2}
+
+Return your answer in this format:
+"""
 ## Which Stock Looks Stronger
 Explain which stock looks stronger right now and why.
 
