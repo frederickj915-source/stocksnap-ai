@@ -81,8 +81,16 @@ else:
 
 def get_stock_data(ticker):
     stock = yf.Ticker(ticker)
-    info = stock.info
-    income_stmt = stock.financials
+
+    try:
+        info = stock.info
+    except Exception:
+        info = {}
+
+    try:
+        income_stmt = stock.financials
+    except Exception:
+        income_stmt = pd.DataFrame()
 
     revenue = "N/A"
     net_income = "N/A"
