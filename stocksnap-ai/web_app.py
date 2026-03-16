@@ -259,14 +259,14 @@ if "OPENAI_API_KEY" not in st.secrets:
     st.error("OPENAI_API_KEY is missing in Streamlit Secrets.")
 else:
 
-    prompt = f"""
+prompt = f"""
 Compare these two stocks for a beginner investor.
 
 Stock 1:
-{stock1}
+{ticker1}
 
 Stock 2:
-{stock2}
+{ticker2}
 
 Return your answer in this format:
 
@@ -275,6 +275,7 @@ Explain which stock looks stronger right now and why.
 
 ## Key Strengths
 List key strengths for each stock.
+"""
 
 ## Key Risks
 List major risks investors should consider.
